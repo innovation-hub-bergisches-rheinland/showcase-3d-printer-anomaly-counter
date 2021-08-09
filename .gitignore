@@ -133,3 +133,6 @@ config.yaml
 
 # test files
 test.py
+
+# IDE
+.vscode/
