@@ -1,0 +1,62 @@
+name: Release image
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - showcase_3d_printer_anomaly_counter/**
+      - tests/**
+      - .python-version
+      - poetry.lock
+      - project.toml
+      - pyproject.toml
+  workflow_dispatch:
+
+env:
+  REGISTRY: quay.io/innovation-hub-bergisches-rheinland
+  IMAGE: showcase-3d-printer-anomaly-counter
+  BUILDER: gcr.io/buildpacks/builder:v1
+
+jobs:
+  release-image:
+    strategy:
+      fail-fast: false
+      matrix:
+        os:
+          - ubuntu-latest
+        python:
+          - '3.8.6'
+        poetry:
+          - '1.1.7'
+    runs-on: ${{ matrix.os }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+
+      - name: Setup Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: ${{ matrix.python }}
+
+      - name: Set up Poetry
+        uses: abatilo/actions-poetry@v2.1.2
+        with:
+          poetry-version: ${{ matrix.poetry }}
+
+      - name: Set version variable
+        run: echo "app_version=$(poetry version -s)" >> $GITHUB_ENV
+
+      - name: Export requirements
+        run: poetry export -f requirements.txt > requirements.txt
+
+      - name: Build and publish
+        uses: dfreilich/pack-action@v1
+        with:
+          args:
+            build ${{ env.REGISTRY }}/${{ env.IMAGE }}:${{ env.app_version }}
+            --builder=${{ env.BUILDER }} --path=/github/workspace/
+            --descriptor=/github/workspace/project.toml --publish
+          username: ${{ secrets.QUAY_IO_USERNAME }}
+          password: ${{ secrets.QUAY_IO_PASSWORD }}
+          registry: ${{ env.REGISTRY }}
