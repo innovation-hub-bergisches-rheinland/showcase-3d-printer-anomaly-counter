@@ -9,11 +9,13 @@ from infrastructure.KafkaEventProducer import KafkaEventProducer
 
 def init_kafka_comm(kafka_config):
     kafka_broker_url = kafka_config.get("KAFKA_BROKER_URL")
-    consumer_topic = kafka_config.get("IN_TOPIC")
-    producer_topic = kafka_config.get("OUT_TOPIC")
-    consumer = KafkaEventConsumer(kafka_broker_url, consumer_topic)
-    producer = KafkaEventProducer(kafka_broker_url, producer_topic)
-    return consumer, producer
+    consumer_topics = kafka_config.get("IN_TOPIC")
+    producer_topics = kafka_config.get("OUT_TOPIC")
+    consumers = []
+    for consumer_topic in consumer_topics:
+        consumers += KafkaEventConsumer(kafka_broker_url, consumer_topic)
+    producer = KafkaEventProducer(kafka_broker_url, producer_topics[0])
+    return consumers, producer
 
 
 def read_config(config_path) -> dict:
@@ -27,9 +29,10 @@ def main():
     config_path = os.path.join(dirs.site_config_dir, "config.yaml")
     config = read_config(config_path=config_path)
 
-    consumer, producer = init_kafka_comm(kafka_config=config.get("kafka"))
+    consumers, producer = init_kafka_comm(kafka_config=config.get("kafka"))
     eventHandler = EventHandler(return_func=producer.send_msg)
-    consumer.register_kafka_listener(listener_func=eventHandler.on_event)
+    for consumer in consumers:
+        consumer.register_kafka_listener(listener_func=eventHandler.on_event)
 
 
 if __name__ == "__main__":
