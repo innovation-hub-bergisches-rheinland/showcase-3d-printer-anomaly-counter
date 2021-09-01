@@ -11,9 +11,9 @@ def init_kafka_comm(kafka_config):
     kafka_broker_url = kafka_config.get("KAFKA_BROKER_URL")
     consumer_topics = kafka_config.get("IN_TOPIC")
     producer_topics = kafka_config.get("OUT_TOPIC")
-    consumers = []
-    for consumer_topic in consumer_topics:
-        consumers += KafkaEventConsumer(kafka_broker_url, consumer_topic)
+    consumers = [
+        KafkaEventConsumer(kafka_broker_url, topic) for topic in consumer_topics
+        ]
     producer = KafkaEventProducer(kafka_broker_url, producer_topics[0])
     return consumers, producer
 
