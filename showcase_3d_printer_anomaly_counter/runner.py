@@ -25,7 +25,7 @@ def read_config(config_path) -> dict:
 
 
 def main():
-    dirs = AppDirs("pythongenericmodule")
+    dirs = AppDirs("showcase-3d-printer-anomaly-counter")
     config_path = os.path.join(dirs.site_config_dir, "config.yaml")
     config = read_config(config_path=config_path)
 
