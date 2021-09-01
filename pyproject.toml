@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "showcase_3d_printer_anomaly_counter"
-version = "0.1.3"
+version = "0.1.4"
 description = "Anomaly Counter per print Request for 3D-Printer Showcase"
 license = "Apache-2.0"
 authors = ["Joern Richter <joern.richter@th-koeln.de>"]
