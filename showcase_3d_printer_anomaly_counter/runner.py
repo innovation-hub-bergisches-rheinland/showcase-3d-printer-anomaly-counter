@@ -20,8 +20,8 @@ def read_config(config_path) -> dict:
     with open(config_path, "r") as ymlfile:
         config = yaml.safe_load(ymlfile)
     kafka_broker_url = config.get("KAFKA_BROKER_URL")
-    consumer_topics = config.get("IN_TOPIC").keys()
-    producer_topics = config.get("OUT_TOPIC").keys()
+    consumer_topics = list(config.get("IN_TOPIC").keys())
+    producer_topics = list(config.get("OUT_TOPIC").keys())
     return kafka_broker_url, consumer_topics, producer_topics
 
 
