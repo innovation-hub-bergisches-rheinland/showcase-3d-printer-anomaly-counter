@@ -1,5 +1,4 @@
-from datetime import datetime
-import json
+import time
 import uuid
 
 
@@ -15,10 +14,7 @@ class Request():
     def anomaly_detected(self):
         self.anomalies += 1
 
-    def stop_request(self, timestamp=int(datetime.utcnow().timestamp())):
+    def stop_request(self, timestamp=round(time.time() * 1000.0)):
         self.stop_timestamp = timestamp
         self.active = False
         self.duration = self.stop_timestamp - self.start_timestamp
-
-    def toJSON(self):
-        return json.dumps(self, default=lambda o: o.__dict__)
