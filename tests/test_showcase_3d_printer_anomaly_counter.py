@@ -38,7 +38,7 @@ input_raw_ignore = {
 
 
 def test_version():
-    assert __version__ == '0.1.4'
+    assert __version__ == '0.1.5'
 
 
 def test_request_init():
