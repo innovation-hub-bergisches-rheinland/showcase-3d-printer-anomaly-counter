@@ -33,6 +33,7 @@ class EventHandler:
         if not self.temp:
             self.temp = fields['t_nozzle_set']
         elif self.temp != fields['t_nozzle_set']:
+            self.temp = fields['t_nozzle_set']
             self._start_new_request(fields['time'])
 
     def _start_new_request(self, timestamp: int):
