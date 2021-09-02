@@ -38,7 +38,7 @@ input_raw_ignore = {
 
 
 def test_version():
-    assert __version__ == '0.1.5'
+    assert __version__ == '0.1.6'
 
 
 def test_request_init():
@@ -77,6 +77,30 @@ def test_eventhandler():
         uuid4_re = "[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}"
         assert re.match(uuid4_re, request['id'])
     EventHandler(returntest)
+
+
+def test_no_new_request():
+    class ReturnTest:
+        def __init__(self):
+            self.return_func_calls = 0
+            self.id = None
+
+        def return_func(self, request: dict):
+            assert type(request) is dict
+            self.return_func_calls += 1
+            self.id = request['id']
+
+    returntest = ReturnTest()
+    eventhandler = EventHandler(returntest.return_func)
+    assert returntest.return_func_calls == 1
+    id1 = returntest.id
+    eventhandler.on_event(input_raw_temp0, "showcase-3d-printer_prusa-esp32")
+    assert returntest.return_func_calls == 1
+    assert eventhandler.temp == input_raw_temp0["fields"]["t_nozzle_set"]
+    assert id1 == returntest.id
+    eventhandler.on_event(input_raw_temp0, "showcase-3d-printer_prusa-esp32")
+    assert id1 == returntest.id
+    assert returntest.return_func_calls == 1
 
 
 def test_start_new_request():
