@@ -21,7 +21,7 @@ class KafkaEventConsumer:
             )
             for msg in consumer:
                 data = json.loads(self._decode_msg(msg))
-                topic = msg.topic()
+                topic = msg.topic
                 listener_func(data, topic)
         print("About to register listener to topic:", self.topic)
         t1 = threading.Thread(target=poll)
