@@ -107,12 +107,16 @@ def test_handly_anomaly_data():
     class ReturnTest:
         def __init__(self):
             self.return_func_calls = 0
+            self.induced_anomalies = 0
 
         def return_func(self, request: dict):
             assert type(request) is dict
+            assert request['anomalies'] == self.induced_anomalies
             self.return_func_calls += 1
 
     returntest = ReturnTest()
     eventhandler = EventHandler(returntest.return_func)
+
+    returntest.induced_anomalies += 1
     eventhandler.on_event({}, "ender_printer_anomalies")
     assert returntest.return_func_calls == 2
