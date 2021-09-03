@@ -8,7 +8,6 @@ class Request():
         self.start_timestamp = start_timestamp
         self.anomalies = 0
         self.duration = 0
-        self.active = True
         self.stop_timestamp = None
 
     def anomaly_detected(self):
