@@ -38,7 +38,7 @@ input_raw_ignore = {
 
 
 def test_version():
-    assert __version__ == '0.1.6'
+    assert __version__ == '0.1.7'
 
 
 def test_request_init():
@@ -49,7 +49,6 @@ def test_request_init():
     assert request.start_timestamp == timestamp
     assert request.anomalies == 0
     assert request.duration == 0
-    assert request.active is True
     assert request.stop_timestamp is None
 
 
@@ -73,13 +72,13 @@ def test_request_stop_request():
 
 def test_eventhandler():
     def returntest(request: dict):
-        assert type(request) is dict
-        uuid4_re = "[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}"
-        assert re.match(uuid4_re, request['id'])
-    EventHandler(returntest)
+        pass
+    eventhandler = EventHandler(returntest)
+    uuid4_re = "[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}"
+    assert re.match(uuid4_re, eventhandler.request.id)
 
 
-def test_no_new_request():
+def test_new_request():
     class ReturnTest:
         def __init__(self):
             self.return_func_calls = 0
@@ -92,39 +91,20 @@ def test_no_new_request():
 
     returntest = ReturnTest()
     eventhandler = EventHandler(returntest.return_func)
+    assert returntest.return_func_calls == 0
+    assert eventhandler.is_request_active is False
+    eventhandler.on_event(input_raw_temp0, "showcase-3d-printer_prusa-esp32")
     assert returntest.return_func_calls == 1
     id1 = returntest.id
-    eventhandler.on_event(input_raw_temp0, "showcase-3d-printer_prusa-esp32")
-    assert returntest.return_func_calls == 1
-    assert eventhandler.temp == input_raw_temp0["fields"]["t_nozzle_set"]
-    assert id1 == returntest.id
-    eventhandler.on_event(input_raw_temp0, "showcase-3d-printer_prusa-esp32")
-    assert id1 == returntest.id
-    assert returntest.return_func_calls == 1
-
-
-def test_start_new_request():
-    class ReturnTest:
-        def __init__(self):
-            self.return_func_calls = 0
-            self.id = None
-
-        def return_func(self, request: dict):
-            assert type(request) is dict
-            self.return_func_calls += 1
-            self.id = request['id']
-
-    returntest = ReturnTest()
-    eventhandler = EventHandler(returntest.return_func)
-    assert returntest.return_func_calls == 1
-    id1 = returntest.id
-    eventhandler.on_event(input_raw_temp0, "showcase-3d-printer_prusa-esp32")
-    assert returntest.return_func_calls == 1
-    assert eventhandler.temp == input_raw_temp0["fields"]["t_nozzle_set"]
-    assert id1 == returntest.id
+    assert eventhandler.is_request_active is True
     eventhandler.on_event(input_raw_temp1, "showcase-3d-printer_prusa-esp32")
+    assert returntest.return_func_calls == 2
+    assert eventhandler.is_request_active is False
+    assert id1 == returntest.id
+    eventhandler.on_event(input_raw_temp0, "showcase-3d-printer_prusa-esp32")
     assert id1 != returntest.id
     assert returntest.return_func_calls == 3
+    assert eventhandler.is_request_active is True
 
 
 def test_handly_anomaly_data():
@@ -141,6 +121,11 @@ def test_handly_anomaly_data():
     returntest = ReturnTest()
     eventhandler = EventHandler(returntest.return_func)
 
+    eventhandler.on_event({}, "ender_printer_anomalies")
+    assert returntest.return_func_calls == 0
+    eventhandler.on_event(input_raw_temp0, "showcase-3d-printer_prusa-esp32")
+    assert eventhandler.is_request_active is True
+    assert returntest.return_func_calls == 1
     returntest.induced_anomalies += 1
     eventhandler.on_event({}, "ender_printer_anomalies")
     assert returntest.return_func_calls == 2

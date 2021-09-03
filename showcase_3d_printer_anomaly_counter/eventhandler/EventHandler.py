@@ -9,8 +9,7 @@ class EventHandler:
     def __init__(self, return_func):
         self.return_func = return_func
         self.request = Request(round(time.time() * 1000.0))
-        self.return_func(self.request.__dict__)
-        self.temp = None
+        self.is_request_active = False
 
     def on_event(self, event: dict, kafka_topic: str):
         try:
@@ -26,18 +25,22 @@ class EventHandler:
             self._handle_raw_temperature_data(event['fields'])
 
     def _handle_anomaly_data(self):
-        self.request.anomaly_detected()
-        self.return_func(self.request.__dict__)
+        if self.is_request_active:
+            self.request.anomaly_detected()
+            self.return_func(self.request.__dict__)
 
     def _handle_raw_temperature_data(self, fields: dict):
-        if not self.temp:
-            self.temp = fields['t_nozzle_set']
-        elif self.temp != fields['t_nozzle_set']:
-            self.temp = fields['t_nozzle_set']
+        if fields['t_nozzle_set'] > 0 and not self.is_request_active:
             self._start_new_request(fields['time'])
+        elif fields['t_nozzle_set'] == 0 and self.is_request_active:
+            self._stop_request(fields['time'])
 
     def _start_new_request(self, timestamp: int):
-        self.request.stop_request(timestamp)
-        self.return_func(self.request.__dict__)
+        self.is_request_active = True
         self.request = Request(timestamp)
+        self.return_func(self.request.__dict__)
+
+    def _stop_request(self, timestamp: int):
+        self.is_request_active = False
+        self.request.stop_request(timestamp)
         self.return_func(self.request.__dict__)
